@@ -75,6 +75,41 @@ def get_character(character_id):
     
 
     return jsonify(character.serialize()), 200
+
+@app.route('/planets', methods=['POST'])
+def post_planet():
+    body=request.get_json()
+    planeta = Planets(**body)
+    db.session.add(planeta)
+    db.session.commit()
+    return jsonify(planeta.serialize()), 201
+
+@app.route('/characters', methods=['POST'])
+def post_characters():
+    body=request.get_json()
+    personaje = Characters(**body)
+    db.session.add(personaje)
+    db.session.commit()
+    return jsonify(personaje.serialize()), 201
+
+@app.route('/characters/<int:character_id>', methods=['DELETE'])
+def delete_character(character_id):
+
+    character= Characters.query.filter_by(id=character_id).first()
+    db.session.delete(character)
+    db.session.commit()
+
+    return jsonify({"message": "Character deleted"}), 200
+
+@app.route('/planets/<int:planet_id>', methods=['DELETE'])
+def delete_planet(planet_id):
+
+    planet= Planets.query.filter_by(id=planet_id).first()
+    db.session.delete(planet)
+    db.session.commit()
+
+    return jsonify({"message": "Planet deleted"}), 200
+        
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
