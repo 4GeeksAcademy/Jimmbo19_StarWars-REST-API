@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User,Planets,Characters
+from models import db, User,Planets,Characters,Favorites
 #from models import Person
 
 app = Flask(__name__)
@@ -75,6 +75,37 @@ def get_character(character_id):
     
 
     return jsonify(character.serialize()), 200
+
+@app.route('/user/<int:user_id>/favorites', methods=['GET'])
+def get_user_favorites(user_id):
+  
+    favorites = db.session.query(
+        User.email, 
+        Favorites.favorite_type, 
+        Planets.name.label('planet_name'), 
+        Characters.name.label('character_name')
+    ).join(Favorites, User.id == Favorites.user_id) \
+    .outerjoin(Planets, Favorites.planet_id == Planets.id) \
+    .outerjoin(Characters, Favorites.character_id == Characters.id) \
+    .filter(User.id == user_id).all()
+
+   
+    result = []
+    for fav in favorites:
+        if fav.favorite_type == 'planet':
+            result.append({
+                "user": fav.email,
+                "favorite": fav.planet_name,
+                "type": "planet"
+            })
+        elif fav.favorite_type == 'character':
+            result.append({
+                "user": fav.email,
+                "favorite": fav.character_name,
+                "type": "character"
+            })
+    
+    return jsonify(result)
 
 @app.route('/planets', methods=['POST'])
 def post_planet():
