@@ -97,12 +97,16 @@ def get_user_favorites(user_id):
                 "user": fav.email,
                 "favorite": fav.planet_name,
                 "type": "planet"
+                
+                
             })
         elif fav.favorite_type == 'character':
             result.append({
                 "user": fav.email,
                 "favorite": fav.character_name,
                 "type": "character"
+                
+                
             })
     
     return jsonify(result)
@@ -141,6 +145,24 @@ def delete_planet(planet_id):
 
     return jsonify({"message": "Planet deleted"}), 200
         
+
+@app.route('/user/<int:user_id>/favorites/<int:favorite_id>', methods=['DELETE'])
+def delete_favorite(user_id, favorite_id):
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+   
+    favorite = Favorites.query.filter_by(id=favorite_id, user_id=user_id).first()
+    if not favorite:
+        return jsonify({"error": "Favorite not found"}), 404
+
+    
+    db.session.delete(favorite)
+    db.session.commit()
+
+    return jsonify({"message": "Favorite deleted successfully"}), 200
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
