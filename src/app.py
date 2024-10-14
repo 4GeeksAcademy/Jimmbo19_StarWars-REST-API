@@ -127,6 +127,45 @@ def post_characters():
     db.session.commit()
     return jsonify(personaje.serialize()), 201
 
+@app.route('/user/<int:user_id>/favorites', methods=['POST'])
+def add_favorite(user_id):
+    body = request.get_json()
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    favorite_type = body.get('favorite_type')
+    favorite_id = body.get('favorite_id')
+
+    if not favorite_type or not favorite_id:
+        return jsonify({"error": "Missing favorite_type or favorite_id"}), 400
+
+ 
+    if favorite_type == 'planet':
+        planet = Planets.query.get(favorite_id)
+        if not planet:
+            return jsonify({"error": "Planet not found"}), 404
+
+        new_favorite = Favorites(user_id=user_id, favorite_type='planet', planet_id=favorite_id)
+
+    elif favorite_type == 'character':
+        character = Characters.query.get(favorite_id)
+        if not character:
+            return jsonify({"error": "Character not found"}), 404
+
+        new_favorite = Favorites(user_id=user_id, favorite_type='character', character_id=favorite_id)
+
+    else:
+        return jsonify({"error": "Invalid favorite_type"}), 400
+
+
+    db.session.add(new_favorite)
+    db.session.commit()
+
+    return jsonify({"message": "Favorite added successfully", "favorite": new_favorite.serialize()}), 201
+
+
 @app.route('/characters/<int:character_id>', methods=['DELETE'])
 def delete_character(character_id):
 
